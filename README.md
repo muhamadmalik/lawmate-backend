@@ -1,8 +1,5 @@
 # Law Mate - Backend Server
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js CI](https://github.com/your-username/law-mate-backend/actions/workflows/node.js.yml/badge.svg)](https://github.com/your-username/law-mate-backend/actions/workflows/node.js.yml)
-
 This repository contains the backend server for **Law Mate**, a platform designed to connect clients seeking legal assistance with qualified lawyers. It handles user authentication, profile management, appointment booking, payment processing, and all core business logic.
 
 ---
