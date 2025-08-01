@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -12,4 +6,234 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum user_role {
+  client
+  lawyer
+}
+
+enum gender_role {
+  Male
+  Female
+  Other
+}
+
+enum appointment_status {
+  Pending
+  Approved
+  Completed
+}
+
+enum payment_status {
+  Pending
+  Paid
+  Failed
+}
+
+enum appointment_type {
+  Online
+  InPerson
+}
+
+enum article_status {
+  Draft
+  Published
+}
+
+enum transaction_type {
+  Credit
+  Debit
+}
+
+enum transaction_status {
+  Pending
+  Completed
+  Failed
+}
+
+model clients {
+  id            String         @id @default(uuid()) @db.Uuid
+  name          String
+  email         String         @unique
+  password_hash String         @map("password_hash")
+  phone         String         @unique
+  city          String
+  gender        gender_role
+  is_verified   Boolean
+  appointments  appointments[]
+  reviews       reviews[]
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+}
+
+model lawyers {
+  id              String                   @id @default(uuid()) @db.Uuid
+  title           String
+  name            String
+  email           String                   @unique
+  password_hash   String                   @map("password_hash")
+  phone           String                   @unique
+  city            String
+  gender          gender_role
+  bio             String
+  languages       String[]
+  specializations lawyer_specializations[]
+  experiences     experiences[]
+  education       educations[]
+  awards          awards[]
+  services        services[]
+  locations       locations[]
+  appointments    appointments[]
+  availabilities  availabilities[]
+  reviews         reviews[]
+  articles        articles[]
+  transactions    wallet_transactions[]
+  is_verified     Boolean                  @default(false)
+  created_at      DateTime                 @default(now())
+  updated_at      DateTime                 @updatedAt
+}
+
+model specializations {
+  id       Int                      @id @default(autoincrement())
+  name     String
+  icon_url String                   @unique
+  lawyers  lawyer_specializations[]
+}
+
+model lawyer_specializations {
+  lawyer_id         String          @db.Uuid
+  specialization_id Int
+  lawyer            lawyers         @relation(fields: [lawyer_id], references: [id], onDelete: Cascade)
+  specialization    specializations @relation(fields: [specialization_id], references: [id], onDelete: Cascade)
+
+  @@id([lawyer_id, specialization_id])
+}
+
+model experiences {
+  id           String   @id @default(uuid()) @db.Uuid
+  lawyer_id    String   @db.Uuid
+  title        String
+  organization String
+  description  String?
+  start_date   DateTime
+  end_date     DateTime
+  lawyer       lawyers  @relation(fields: [lawyer_id], references: [id], onDelete: Cascade)
+}
+
+model educations {
+  id              String  @id @default(uuid()) @db.Uuid
+  lawyer_id       String  @db.Uuid
+  degree          String
+  university      String
+  year_of_passing Int
+  lawyer          lawyers @relation(fields: [lawyer_id], references: [id], onDelete: Cascade)
+}
+
+model awards {
+  id         String  @id @default(uuid()) @db.Uuid
+  lawyer_id  String  @db.Uuid
+  name       String
+  awarded_by String
+  year       Int
+  lawyer     lawyers @relation(fields: [lawyer_id], references: [id], onDelete: Cascade)
+}
+
+model services {
+  id           String         @id @default(uuid()) @db.Uuid
+  lawyer_id    String         @db.Uuid
+  name         String
+  description  String
+  appointments appointments[]
+  price        Decimal        @db.Decimal(10, 2)
+  currency     String         @default("PKR")
+  lawyer       lawyers        @relation(fields: [lawyer_id], references: [id], onDelete: Cascade)
+}
+
+model locations {
+  id             String         @id @default(uuid()) @db.Uuid
+  lawyer_id      String         @db.Uuid
+  office_address String
+  description    String
+  city           String
+  appointments   appointments[]
+  lawyer         lawyers        @relation(fields: [lawyer_id], references: [id], onDelete: Cascade)
+}
+
+model availabilities {
+  id          String   @id @default(uuid()) @db.Uuid
+  lawyer_id   String   @db.Uuid
+  day_of_week Int
+  start_time  DateTime
+  end_time    DateTime
+  lawyer      lawyers  @relation(fields: [lawyer_id], references: [id], onDelete: Cascade)
+
+  @@unique([lawyer_id, day_of_week, start_time])
+}
+
+model appointments {
+  id               String                @id @default(uuid()) @db.Uuid
+  client_id        String                @db.Uuid
+  lawyer_id        String                @db.Uuid
+  service_id       String                @db.Uuid
+  appointment_time DateTime
+  duration_minutes Int                   @default(30)
+  location_id      String                @db.Uuid
+  status           appointment_status    @default(Pending)
+  reviews          reviews[]
+  fee              Decimal               @db.Decimal(10, 2)
+  payment_status   payment_status        @default(Pending)
+  created_at       DateTime              @default(now())
+  transaction      wallet_transactions[]
+  lawyer           lawyers               @relation(fields: [lawyer_id], references: [id])
+  location         locations             @relation(fields: [location_id], references: [id])
+  service          services              @relation(fields: [service_id], references: [id])
+  client           clients               @relation(fields: [client_id], references: [id])
+}
+
+model reviews {
+  id             String       @id @default(uuid()) @db.Uuid
+  appointment_id String       @db.Uuid
+  client_id      String       @db.Uuid
+  lawyer_id      String       @db.Uuid
+  comment        String?
+  rating         Int
+  appointment    appointments @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  client         clients      @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  lawyer         lawyers      @relation(fields: [lawyer_id], references: [id], onDelete: Cascade)
+  created_at     DateTime     @default(now())
+
+  @@unique([appointment_id])
+}
+
+model articles {
+  id           String         @id @default(uuid()) @db.Uuid
+  author_id    String         @db.Uuid
+  title        String
+  content      String
+  image_url    String
+  author       lawyers        @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  status       article_status @default(Draft)
+  created_at   DateTime       @default(now())
+  published_at DateTime?
+}
+
+model wallet_transactions {
+  id             String             @id @default(uuid()) @db.Uuid
+  lawyer_id      String             @db.Uuid
+  appointment_id String?            @db.Uuid
+  amount         Decimal            @db.Decimal(10, 2)
+  status         transaction_status @default(Pending)
+  description    String
+  created_at     DateTime           @default(now())
+  appointment    appointments?      @relation(fields: [appointment_id], references: [id])
+  lawyer         lawyers            @relation(fields: [lawyer_id], references: [id])
+}
+
+model otps {
+  id         Int      @id @default(autoincrement())
+  phone      String
+  code       String
+  expires_at DateTime
+  created_at DateTime @default(now())
 }

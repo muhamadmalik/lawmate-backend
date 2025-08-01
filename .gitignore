@@ -4,8 +4,10 @@ node_modules/
 # Build output
 dist/
 
-# Prisma generated client (optional if you're rebuilding it every time)
+# Prisma generated client 
 .prisma/
+
+/generated/
 
 # Env files
 .env
